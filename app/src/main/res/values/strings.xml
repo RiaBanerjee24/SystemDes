@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">FinalNFCTestProject</string>
+    <string name="enterName">Enter your first and last name:</string>
+    <string name="enterId">Enter your student id:</string>
+    <string name="nameHint">Name</string>
+    <string name="idHint">ID</string>
+    <string name="clockIn">Clock In</string>
+    <string name="clockOut">Clock Out</string>
+</resources>
