@@ -34,7 +34,7 @@ public class MainActivity extends AppCompatActivity {
     public static final String Write_Error = "Error during Writing, Try Again!";
     NfcAdapter nfcAdapter;
     PendingIntent pendingIntent;
-    IntentFilter intentFilter;
+    IntentFilter writeTagFilters[];
     boolean writeMode;
     Tag myTag;
     Context context;
@@ -79,7 +79,7 @@ public class MainActivity extends AppCompatActivity {
         pendingIntent = PendingIntent.getActivity(this, 0, new Intent(this, getClass()).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP), 0);
         IntentFilter tagDetected = new IntentFilter(NfcAdapter.ACTION_TAG_DISCOVERED);
         tagDetected.addCategory(Intent.CATEGORY_DEFAULT);
-        wrtieTagFilters = new IntentFilter[]{ tagDetected };
+        writeTagFilters = new IntentFilter[]{ tagDetected };
     }
     private void readFromIntent(Intent intent){
         String action = intent.getAction();
@@ -128,9 +128,40 @@ public class MainActivity extends AppCompatActivity {
         byte[] langBytes = lang.getBytes("US-ASCII");
         int langLength = langBytes.length;
         int textLength = textBytes.length;
-        byte[] payload = new byte[1 + langLength + textLength;]
+        byte[] payload = new byte[1 + langLength + textLength];
+        payload[0] = (byte) langLength;
+        System.arraycopy(langBytes, 0, payload, 1, langLength);
+        System.arraycopy(textBytes,0, payload, 1+langLength, textLength);
+        NdefRecord recordNFC = new NdefRecord(NdefRecord.TNF_WELL_KNOWN, NdefRecord.RTD_TEXT, new byte[0], payload);
 
         return recordNFC;
+    }
+    @Override
+    protected void onNewIntent(Intent intent){
+        super.onNewIntent(intent);
+        setIntent(intent);
+        readFromIntent(intent);
+        if(NfcAdapter.ACTION_TAG_DISCOVERED.equals(intent.getAction())){
+            myTag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
+        }
+    }
+    @Override
+    public void onPause(){
+        super.onPause();
+        WriteModeOff();
+    }
+    @Override
+    public void onResume(){
+        super.onResume();
+        WriteModeOn();
+    }
+    private void WriteModeOn(){
+        writeMode = true;
+        nfcAdapter.enableForegroundDispatch(this, pendingIntent, writeTagFilters, null);
+    }
+    private void WriteModeOff(){
+        writeMode = false;
+        nfcAdapter.disableForegroundDispatch(this);
     }
 
 }
